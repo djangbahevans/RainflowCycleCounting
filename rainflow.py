@@ -245,7 +245,7 @@ def eval_valleys(valleys_extreme, sig):
                                 valley.position[-1] else valley.position[-1]
                             valley.pos_dict[valley.index_of_position[-1]] = k_pos if k_pos \
                                 <= valley.position[-1] else valley.position[-1]
-            else:
+            else: # If the valley has terminated, skip the entire loop
                 break
     print('Exiting Valley function')
 
