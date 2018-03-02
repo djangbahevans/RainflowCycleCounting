@@ -203,22 +203,30 @@ def eval_valleys(valleys_extreme, sig):
     """
     print('Inside Valleys function')
 
-    # Loop through all valley objects stored in memory
+    # Loop through all valley objects
     for a, valley in enumerate(valleys_extreme):
         print('Valley at index {}'.format(valley.index))
+        # Considers signals that come after selected valley
         con_sigs = sig[valley.index+1:]
+        # Loops through the selected signal
         for con_sig, _ in enumerate(con_sigs):
-            if not valley.terminate:
+            if not valley.terminate:  # While the cycle hasn't ended
+                # Jump to the next extrema and append the index of the next extrema to the valley's index property
                 valley.index_of_position += [con_sig+valley.index+1]
+                # Check to see if the next extrema is a valley
                 if isvalley(con_sig+valley.index + 1, sig):
+                    # Append the value of the next extrema to the position property of the valley
                     valley.position += [valley.position[-1]]
+                    
+                    # Also append it to the post_dict dictionary with the index as key
                     valley.pos_dict[valley.index_of_position[-1]
                                     ] = valley.position[-1]
+                    # Terminate if the value of the current valley is greater than the value of the considered extrema
                     if con_sigs[con_sig] <= valley.value:
                         valley.terminate = True
                         break
-                else:
-                    c_valleys = valleys_extreme[:a]
+                else: # If the next extrema is a peak
+                    c_valleys = valleys_extreme[:a] 
                     max_ind = max(valley.index_of_position)
                     if con_sigs[con_sig] > valley.position[-1]:
                         valley.pos_dict[valley.index_of_position[-1]
