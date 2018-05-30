@@ -1,25 +1,79 @@
 """
-author: Evans Djangbah
-date: 4/11/2017 12:46
+-------------------------------------------------------------------------------
+Rainflow counting function
+Copyright (C) 2017 Evans Djangbah
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+Contact: Evans Djangbah, Kwame Nkrumah University of Science and Technology
+Email: djangbahevans@gmail.com
+-------------------------------------------------------------------------------
+USAGE:
+To run the program, just double click the program icon on the computer and
+follow the GUI prompts or from a terminal, go to the file directory loacation
+and run 'python rain.py'
+-------------------------------------------------------------------------------
+DEPENDENCIES:
+- Numpy
+- Matplotlib
+- PyQt5
+- xlrd
+-------------------------------------------------------------------------------
 """
 
-import os
-from sys import argv
-import time
-# from multiprocessing import Process
-from threading import Thread
 
-from matplotlib import pyplot as plt
-from matplotlib.backends.backend_qt5agg import \
-    FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import \
-    NavigationToolbar2QT as NavigationalToolbar
-from matplotlib.figure import Figure
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QFileDialog,
-                             QGridLayout, QLabel, QLineEdit, QPushButton,
-                             QTextBrowser, QWidget)
-from xlrd import open_workbook
+def install_module(module: str) -> None:
+    pypath = os.path.dirname(executable)
+    pippath = os.path.join(pypath, 'Scripts', 'pip.exe')
+    os.system(f'"{pippath}" install {module}')
+
+
+import os
+from sys import argv, path, executable
+import time
+from concurrent.futures import ProcessPoolExecutor
+
+try:
+    from PyQt5.QtGui import QIcon
+    from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QFileDialog,
+                                 QGridLayout, QLabel, QLineEdit, QPushButton,
+                                 QTextBrowser, QWidget)
+except ModuleNotFoundError:
+    install_module('pyqt5')
+    from PyQt5.QtGui import QIcon
+    from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QFileDialog,
+                                 QGridLayout, QLabel, QLineEdit, QPushButton,
+                                 QTextBrowser, QWidget)
+
+
+try:
+    from matplotlib import pyplot as plt
+    from matplotlib.backends.backend_qt5agg import \
+        FigureCanvasQTAgg as FigureCanvas
+    from matplotlib.backends.backend_qt5agg import \
+        NavigationToolbar2QT as NavigationalToolbar
+    from matplotlib.figure import Figure
+except ModuleNotFoundError:
+    install_module('matplotlib')
+    from matplotlib import pyplot as plt
+    from matplotlib.backends.backend_qt5agg import \
+        FigureCanvasQTAgg as FigureCanvas
+    from matplotlib.backends.backend_qt5agg import \
+        NavigationToolbar2QT as NavigationalToolbar
+    from matplotlib.figure import Figure
+
+try:
+    from xlrd import open_workbook
+except:
+    install_module('xlrd')
+    from xlrd import open_workbook
 
 from rainflow import rainflow
 
@@ -140,13 +194,8 @@ class MainWindow(QWidget):
         self.text_browser.setText(header)
 
         # Run independent code of separate threads
-        p = Thread(target=plot_extrema, args=(self, peaks))
-        v = Thread(target=plot_extrema, args=(self, valleys))
-
-        p.start()
-        v.start()
-        p.join()
-        v.join()
+        plot_extrema(self, peaks)
+        plot_extrema(self, valleys)
 
         self.canvas.draw()
         print('Took {}s'.format(time.time() - ts))
@@ -156,7 +205,7 @@ class MainWindow(QWidget):
         """
         Plot Number of Cycles against Temperature Range
         """
-        cycles = {}
+        cycles: dict = {}
         for peak in peaks:
             if peak.range in cycles.keys():
                 cycles[peak.range] += 1

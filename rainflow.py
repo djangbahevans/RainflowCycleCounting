@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 -------------------------------------------------------------------------------
 Rainflow counting function
@@ -31,7 +30,8 @@ WISDEM project: https://github.com/WISDEM/AeroelasticSE/tree/master/src/Aeroelas
 """
 
 from random import choice
-from threading import Thread
+from concurrent.futures import ProcessPoolExecutor
+# from typing import 
 
 import numpy as np
 
@@ -58,7 +58,7 @@ class Valley(object):
     def parent_signal(self):
         return self.__parent_signal__
 
-    def plot(self, axes):
+    def plot(self, axes) -> None:
         print('Plotting Valley at index {}'.format(self.index))
         x = []
         y = []
@@ -105,7 +105,7 @@ class Peak(object):
     def parent_signal(self):
         return self.__parent_signal__
 
-    def plot(self, axes):
+    def plot(self, axes) -> None:
         print('Plotting Peak at index {}'.format(self.index))
         x = []
         y = []
@@ -130,7 +130,7 @@ class Peak(object):
         axes.plot(x[0], y[0], color + shape)
 
 
-def isvalley(index, signal):
+def isvalley(index, signal) -> bool:
     try:
         if signal[index+1] > signal[index]:
             return True
@@ -140,7 +140,7 @@ def isvalley(index, signal):
     return False
 
 
-def eval_peaks(peaks_extremes, sig):
+def eval_peaks(peaks_extremes, sig) -> None:
     """
     Rainflow codes for the evaluation of valleys
 
@@ -190,7 +190,7 @@ def eval_peaks(peaks_extremes, sig):
     print('Exiting Peak Function')
 
 
-def eval_valleys(valleys_extreme, sig):
+def eval_valleys(valleys_extreme, sig) -> None:
     """
     Rainflow codes for the evaluation of valleys
 
@@ -281,16 +281,10 @@ def rainflow(sig):
         else:
             peaks += [Peak(value, i, sig)]
 
-    # Run independent rainflow code of separate threads
-    p = Thread(target=eval_peaks, args=(peaks, sig))
-    v = Thread(target=eval_valleys, args=(valleys, sig))
-
-    p.start()
-    v.start()
-
-    # Join the two threads to the main thread
-    p.join()
-    v.join()
+    # Run independent rainflow code of separate process
+    with ProcessPoolExecutor(max_workers=2) as pool:
+        pool.submit(eval_peaks, peaks, sig)
+        pool.submit(eval_valleys, valleys, sig)
 
     return sig, peaks, valleys
 
